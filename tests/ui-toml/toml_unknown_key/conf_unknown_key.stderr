@@ -14,9 +14,9 @@ LL | foobar = 42
            allow-exact-repetitions
            allow-expect-in-consts
            allow-expect-in-tests
-           allow-ignored-result-err-in-tests
            allow-indexing-slicing-in-tests
            allow-large-stack-frames-in-tests
+           allow-match-wild-err-arm-in-tests
            allow-mixed-uninlined-format-args
            allow-one-hash-in-raw-strings
            allow-panic-in-tests

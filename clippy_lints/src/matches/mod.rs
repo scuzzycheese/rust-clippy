@@ -28,7 +28,7 @@ use clippy_config::Conf;
 use clippy_utils::msrvs::{self, Msrv};
 use clippy_utils::source::SpanExt as _;
 use clippy_utils::{
-    higher, is_direct_expn_of, is_in_const_context, is_lint_allowed, is_span_match, sym, tokenize_with_text,
+    higher, is_direct_expn_of, is_in_const_context, is_in_test, is_lint_allowed, is_span_match, sym, tokenize_with_text,
 };
 use rustc_hir::{Arm, Expr, ExprKind, LetStmt, MatchSource, Pat, PatKind};
 use rustc_lexer::{TokenKind, is_whitespace};
@@ -529,12 +529,16 @@ declare_clippy_lint! {
 
 declare_clippy_lint! {
     /// ### What it does
-    /// Checks for arm which matches all errors with `Err(_)`
-    /// and take drastic actions like `panic!`.
+    /// Checks for arms which match all errors with `Err(_)`
+    /// and take drastic actions like `panic!`, and for `if let Ok(..)`,
+    /// `while let Ok(..)` and `let Ok(..) = .. else` constructs that silently
+    /// discard the `Err` variant without binding it.
     ///
     /// ### Why is this bad?
     /// It is generally a bad practice, similar to
-    /// catching all exceptions in java with `catch(Exception)`
+    /// catching all exceptions in java with `catch(Exception)`.
+    /// The error value contains context about what went wrong. Discarding it
+    /// prevents detailed logging and makes error recovery impossible.
     ///
     /// ### Example
     /// ```no_run
@@ -543,11 +547,23 @@ declare_clippy_lint! {
     ///     Ok(_) => println!("ok"),
     ///     Err(_) => panic!("err"),
     /// }
+    ///
+    /// if let Ok(v) = x {
+    ///     println!("{v}");
+    /// }
+    /// ```
+    /// Use instead:
+    /// ```no_run
+    /// let x: Result<i32, &str> = Ok(3);
+    /// match x {
+    ///     Ok(v) => println!("{v}"),
+    ///     Err(e) => eprintln!("failed: {e}"),
+    /// }
     /// ```
     #[clippy::version = "pre 1.29.0"]
     pub MATCH_WILD_ERR_ARM,
     pedantic,
-    "a `match` with `Err(_)` arm and take drastic actions"
+    "a `match` with `Err(_)` arm and take drastic actions, or a `Result` pattern that discards the `Err` variant"
 }
 
 declare_clippy_lint! {
@@ -1038,6 +1054,7 @@ impl_lint_pass!(Matches => [
 
 pub struct Matches {
     msrv: Msrv,
+    allow_match_wild_err_arm_in_tests: bool,
     infallible_destructuring_match_linted: bool,
 }
 
@@ -1045,6 +1062,7 @@ impl Matches {
     pub fn new(conf: &'static Conf) -> Self {
         Self {
             msrv: conf.msrv.into(),
+            allow_match_wild_err_arm_in_tests: conf.allow_match_wild_err_arm_in_tests,
             infallible_destructuring_match_linted: false,
         }
     }
@@ -1054,6 +1072,11 @@ impl<'tcx> LateLintPass<'tcx> for Matches {
     #[expect(clippy::too_many_lines)]
     fn check_expr(&mut self, cx: &LateContext<'tcx>, expr: &'tcx Expr<'_>) {
         let from_expansion = expr.span.from_expansion();
+
+        let skip_in_test = self.allow_match_wild_err_arm_in_tests && is_in_test(cx.tcx, expr.hir_id);
+        if !skip_in_test && !expr.span.in_external_macro(cx.tcx.sess.source_map()) {
+            match_wild_err_arm::check_if_while_let(cx, expr);
+        }
 
         if let ExprKind::Match(ex, arms, source) = expr.kind {
             if is_direct_expn_of(expr.span, sym::matches).is_some()
@@ -1076,7 +1099,9 @@ impl<'tcx> LateLintPass<'tcx> for Matches {
             collapsible_match::check_match(cx, ex, arms, self.msrv);
             if !from_expansion {
                 // These don't depend on a relationship between multiple arms
-                match_wild_err_arm::check(cx, ex, arms);
+                if !skip_in_test {
+                    match_wild_err_arm::check(cx, ex, arms);
+                }
                 wild_in_or_pats::check(cx, ex, arms);
             }
 
@@ -1227,6 +1252,10 @@ impl<'tcx> LateLintPass<'tcx> for Matches {
     }
 
     fn check_local(&mut self, cx: &LateContext<'tcx>, local: &'tcx LetStmt<'_>) {
+        let skip_in_test = self.allow_match_wild_err_arm_in_tests && is_in_test(cx.tcx, local.hir_id);
+        if !skip_in_test && !local.span.in_external_macro(cx.tcx.sess.source_map()) {
+            match_wild_err_arm::check_let_else(cx, local);
+        }
         self.infallible_destructuring_match_linted |=
             local.els.is_none() && infallible_destructuring_match::check(cx, local);
     }

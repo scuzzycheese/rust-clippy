@@ -32,5 +32,51 @@ LL |         Err(_e) => panic!(),
    |
    = note: match each error separately or use the error output, or use `.expect(msg)` if the error case is unreachable
 
-error: aborting due to 4 previous errors
+error: this `if let Ok(...)` discards the `Err` variant
+  --> tests/ui/match_wild_err_arm.rs:88:5
+   |
+LL | /     if let Ok(res) = some_call() {
+LL | |
+LL | |         println!("{res}");
+LL | |     } else {
+LL | |         println!("something went wrong");
+LL | |     }
+   | |_____^
+   |
+   = help: consider using `match` and binding the `Err` value for logging or recovery
+
+error: this `if let Ok(...)` discards the `Err` variant
+  --> tests/ui/match_wild_err_arm.rs:96:5
+   |
+LL | /     if let Ok(res) = some_call() {
+LL | |
+LL | |         println!("{res}");
+LL | |     }
+   | |_____^
+   |
+   = help: consider using `match` and binding the `Err` value for logging or recovery
+
+error: this `while let Ok(...)` discards the `Err` variant
+  --> tests/ui/match_wild_err_arm.rs:102:5
+   |
+LL | /     while let Ok(res) = some_call() {
+LL | |
+LL | |         println!("{res}");
+LL | |     }
+   | |_____^
+   |
+   = help: consider using `loop` + `match` and binding the `Err` value for logging or recovery
+
+error: this `let Ok(...) = ... else` discards the `Err` variant
+  --> tests/ui/match_wild_err_arm.rs:108:5
+   |
+LL | /     let Ok(res) = some_call() else {
+LL | |
+LL | |         return;
+LL | |     };
+   | |______^
+   |
+   = help: consider using `match` and binding the `Err` value for logging or recovery
+
+error: aborting due to 8 previous errors
 

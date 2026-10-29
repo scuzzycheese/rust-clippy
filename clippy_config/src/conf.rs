@@ -261,15 +261,15 @@ define_Conf! {
     /// Whether `expect` should be allowed in test functions or `#[cfg(test)]`
     #[lints(expect_used)]
     allow_expect_in_tests("allow-expect-in-tests"): bool = false,
-    /// Whether `ignored_result_err` should be allowed in test functions or `#[cfg(test)]`
-    #[lints(ignored_result_err)]
-    allow_ignored_result_err_in_tests("allow-ignored-result-err-in-tests"): bool = false,
     /// Whether `indexing_slicing` should be allowed in test functions or `#[cfg(test)]`
     #[lints(indexing_slicing)]
     allow_indexing_slicing_in_tests("allow-indexing-slicing-in-tests"): bool = false,
     /// Whether functions inside `#[cfg(test)]` modules or test functions should be checked.
     #[lints(large_stack_frames)]
     allow_large_stack_frames_in_tests("allow-large-stack-frames-in-tests"): bool = true,
+    /// Whether `match_wild_err_arm` should be allowed in test functions or `#[cfg(test)]`
+    #[lints(match_wild_err_arm)]
+    allow_match_wild_err_arm_in_tests("allow-match-wild-err-arm-in-tests"): bool = false,
     /// Whether to allow mixed uninlined format args, e.g. `format!("{} {}", a, foo.bar)`
     #[lints(uninlined_format_args)]
     allow_mixed_uninlined_format_args("allow-mixed-uninlined-format-args"): bool = true,

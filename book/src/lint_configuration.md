@@ -101,16 +101,6 @@ Whether `expect` should be allowed in test functions or `#[cfg(test)]`
 * [`expect_used`](https://clippy.rust-lang.org/main/index.html#expect_used)
 
 
-## `allow-ignored-result-err-in-tests`
-Whether `ignored_result_err` should be allowed in test functions or `#[cfg(test)]`
-
-**Default Value:** `false`
-
----
-**Affected lints:**
-* [`ignored_result_err`](https://clippy.rust-lang.org/main/index.html#ignored_result_err)
-
-
 ## `allow-indexing-slicing-in-tests`
 Whether `indexing_slicing` should be allowed in test functions or `#[cfg(test)]`
 
@@ -129,6 +119,16 @@ Whether functions inside `#[cfg(test)]` modules or test functions should be chec
 ---
 **Affected lints:**
 * [`large_stack_frames`](https://clippy.rust-lang.org/main/index.html#large_stack_frames)
+
+
+## `allow-match-wild-err-arm-in-tests`
+Whether `match_wild_err_arm` should be allowed in test functions or `#[cfg(test)]`
+
+**Default Value:** `false`
+
+---
+**Affected lints:**
+* [`match_wild_err_arm`](https://clippy.rust-lang.org/main/index.html#match_wild_err_arm)
 
 
 ## `allow-mixed-uninlined-format-args`
